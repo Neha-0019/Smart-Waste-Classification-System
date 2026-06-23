@@ -21,6 +21,7 @@ from taxonomy import WASTE_TAXONOMY, CARBON_COLORS, get_decomposition_display
 from impact_calculator import compute_full_analysis
 from report_generator import (
     generate_summary_dataframe,
+    generate_detailed_dataframe,
     generate_composition_chart,
     generate_recyclability_trend,
 )
@@ -660,6 +661,19 @@ else:
                     if trend_chart:
                         st.pyplot(trend_chart, use_container_width=True)
                         plt.close(trend_chart)
+
+                    detailed_df = generate_detailed_dataframe(current_history)
+                    if not detailed_df.empty:
+                        csv_data = detailed_df.to_csv(index=False).encode('utf-8')
+                        st.markdown('<div style="margin-top: 14px;"></div>', unsafe_allow_html=True)
+                        st.download_button(
+                            label="📥 Export Session Data (CSV)",
+                            data=csv_data,
+                            file_name="waste_analysis_session_report.csv",
+                            mime="text/csv",
+                            use_container_width=True,
+                            key="export_csv_btn",
+                        )
             else:
                 st.markdown(
                     '<p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary); text-align: center; padding: 12px;">'
