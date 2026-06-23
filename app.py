@@ -396,15 +396,17 @@ else:
                 st.image(active_image, use_container_width=True)
 
             with img_right:
-                st.markdown('<p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">GRAD-CAM OVERLAY</p>', unsafe_allow_html=True)
-                # Placeholder — will be wired in PR #9
                 detected_classes = list(active_filtered.keys())
-                st.markdown(
-                    '<div style="background: var(--bg-surface); border: 1px solid var(--border-sage); '
-                    'padding: 40px; text-align: center; font-family: var(--font-mono); font-size: 0.8rem; '
-                    'color: var(--text-secondary);">Grad-CAM visualization will appear here</div>',
-                    unsafe_allow_html=True,
+                gradcam_target = st.selectbox(
+                    "Visualize attention for:",
+                    options=detected_classes,
+                    index=0,
+                    key="gradcam_class_selector",
+                    label_visibility="collapsed",
                 )
+                st.markdown(f'<p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">GRAD-CAM — {gradcam_target}</p>', unsafe_allow_html=True)
+                gradcam_overlay = detector.get_gradcam(active_image, gradcam_target)
+                st.image(gradcam_overlay, use_container_width=True)
 
             # ── DETECTION RESULTS ──
             st.markdown('<div class="section-label">Detection Results</div>', unsafe_allow_html=True)
