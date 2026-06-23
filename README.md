@@ -1,444 +1,89 @@
-# ♻️ WasteVision-AI
+# ♻️ Smart Waste Classification System (WasteAI)
 
-### Smart Waste Classification for Smart Waste Management using Computer Vision and Deep Learning
-
-![Python](https://img.shields.io/badge/Python-3.11-blue)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange)
-![Flask](https://img.shields.io/badge/Flask-Web%20App-black)
-![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-green)
-![SQLite](https://img.shields.io/badge/SQLite-Database-blue)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+An AI-powered computer vision and environmental analytics application that detects, classifies, and analyzes waste materials in real time. Built using Python, PyTorch, Streamlit, OpenCV, and Grad-CAM, the system combines deep learning models with a polished Forest Green + Electric Lime developer-brutalist theme to deliver interactive, explainable, and actionable waste management insights.
 
 ---
 
 ## 📌 Project Overview
 
-WasteVision-AI is an AI-powered smart waste classification system designed to automate waste segregation using Computer Vision and Deep Learning.
-
-The system classifies waste images into multiple categories and recommends the appropriate disposal method, helping improve recycling efficiency and sustainable waste management practices.
-
-The project combines:
-
-* Deep Learning
-* Computer Vision
-* Real-Time Webcam Detection
-* Flask Web Application
-* SQLite Database
-* Waste Disposal Recommendation Engine
+Traditional waste classification systems struggle to address mixed-material waste and explain why classifications are made. **WasteAI** addresses these limitations by providing:
+- **PyTorch Inference**: Dual-mode inference supporting a fine-tuned EfficientNet-B3 architecture and an intelligent color-space bias mock model.
+- **Explainable AI (XAI)**: High-resolution Grad-CAM (Gradient-weighted Class Activation Mapping) overlays to visualize feature-level model attention for any detected class.
+- **Ecological Impact Analysis**: Instant carbon footprint assessment, weighted recyclability scores (0–100%), and dynamic A–E grade assignments.
+- **Session-scoped Tracking**: Locally cached database storing thumbnail-indexed scans with sorting, viewing, and clearing operations.
+- **Exportable Analytics**: Matplotlib-based composition breakdown charts, historical recyclability trend visualizations, and direct CSV exporting.
 
 ---
 
 ## 🚀 Features
 
-### 🔍 Waste Classification
-
-Classifies waste into 9 categories:
-
-| Class        | Description                              |
-| ------------ | ---------------------------------------- |
-| Cardboard    | Packaging boxes and corrugated materials |
-| Glass        | Bottles, jars, and glass waste           |
-| Metal        | Cans, tins, and metallic waste           |
-| Paper        | Newspapers, magazines, and office paper  |
-| Plastic Hard | Bottles and rigid plastic containers     |
-| Plastic Soft | Plastic bags, wrappers, and films        |
-| Organic      | Food scraps and biodegradable waste      |
-| E-Waste      | Electronics, batteries, and cables       |
-| Textile      | Clothes, fabric scraps, and footwear     |
-
----
-
-### ♻️ Disposal Recommendation System
-
-After classification, the system recommends the correct disposal method.
-
-Example:
-
-| Waste Type   | Disposal Method             |
-| ------------ | --------------------------- |
-| Cardboard    | Recyclable Bin              |
-| Glass        | Recyclable Bin              |
-| Metal        | Recyclable Bin              |
-| Paper        | Recyclable Bin              |
-| Plastic Hard | Recyclable Bin              |
-| Plastic Soft | Soft Plastic Collection Bin |
-| Organic      | Compost Bin                 |
-| E-Waste      | E-Waste Collection Point    |
-| Textile      | Textile Recycling Bin       |
-
----
-
-### 🌍 Environmental Impact Awareness
-
-Each prediction includes environmental impact information to promote sustainable disposal practices.
-
-Example:
-
-> Soft plastics may take hundreds of years to decompose and should be recycled separately.
-
----
-
-### 📷 Real-Time Webcam Detection
-
-* Live waste classification
-* Confidence score display
-* FPS monitoring
-* Disposal recommendation overlay
-* Screenshot capture support
-
----
-
-### 📊 Analytics Dashboard
-
-* Prediction history
-* Most common waste category
-* Average confidence score
-* Class distribution charts
-* Dataset quality reports
-
----
-
-## 🏗️ Project Architecture
-
-```text
-Image Input
-      │
-      ▼
-Preprocessing
-      │
-      ▼
-EfficientNetV2B0
-      │
-      ▼
-Waste Classification
-      │
-      ▼
-Disposal Recommendation
-      │
-      ▼
-SQLite Database
-      │
-      ▼
-Flask Dashboard
-```
-
-## 🧠 Model Architecture
-
-### Backbone
-
-* EfficientNetV2B0
-* ImageNet Pretrained Weights
-
-### Input
-
-```python
-224 x 224 x 3
-```
-
-### Classification Head
-
-```python
-GlobalAveragePooling2D()
-
-BatchNormalization()
-
-Dense(512, activation="relu")
-
-Dropout(0.5)
-
-Dense(256, activation="relu")
-
-Dropout(0.4)
-
-Dense(9, activation="softmax")
-```
-
-### Training Strategy
-
-#### Phase A
-
-* Freeze Backbone
-* Train Classification Head
-
-#### Phase B
-
-* Unfreeze Last 50 Layers
-* Fine Tune Model
-
-#### Phase C
-
-* Fine Tune Entire Network
+- **Multi-Label Inference**: Identifies multiple waste materials in a single image with confidence progress bars.
+- **Taxonomy recommendations**: Outlines precise disposal methods, decomposition timelines, and carbon footprint levels for 9 categories.
+- **Visual Attention (Grad-CAM)**: Dropdown class selector displays target feature heatmaps using `pytorch-grad-cam` to explain classification decisions.
+- **Session Summary Metrics**: Real-time counters showing *Total Scans*, *Most Frequent Type*, and *Average Recyclability*.
+- **Interactive Batch Reports**: Stacked composition bar charts and a line graph showing recyclability progress over time.
+- **CSV Data Export**: Single-click downloads for comprehensive offline database analyses.
 
 ---
 
 ## 📂 Project Structure
 
 ```text
-WasteVision-AI/
-
-├── dataset/
-│   ├── raw/
-│   └── processed/
-│
-├── models/
-│
-├── reports/
-│
-├── static/
-│
-├── templates/
-│
-├── config.py
-├── database.py
-├── data_prep.py
-├── train.py
-├── evaluate.py
-├── predict.py
-├── webcam_detection.py
-├── app.py
-├── requirements.txt
-├── README.md
-└── wastevision.db
+Smart-Waste-Classification-System/
+├── .streamlit/
+│   └── config.toml          # Custom theme configuration
+├── app.py                   # Main Streamlit web application & UI layout
+├── taxonomy.py              # Waste classes mapping & environmental metrics
+├── waste_detector.py        # EfficientNet-B3 model and Grad-CAM engine
+├── impact_calculator.py     # Weighted recyclability & carbon calculations
+├── history_manager.py       # Session state scan database & statistics
+├── report_generator.py      # Pandas dataframes & Matplotlib chart generators
+├── requirements.txt         # Project package dependencies
+└── README.md                # System documentation
 ```
 
 ---
 
-## 📥 Dataset Setup
+## 🛠️ Tech Stack & Dependencies
 
-Create:
-
-```text
-dataset/raw/
-```
-
-Add the following folders:
-
-```text
-cardboard
-glass
-metal
-paper
-plastic_hard
-plastic_soft
-organic
-e_waste
-textile
-```
-
-### Dataset Sources
-
-* Garbage Classification Dataset
-* TACO Dataset
-* Waste Classification Data
-* E-Waste Images Dataset
-* Textile Waste Image Dataset
+- **Framework**: Streamlit (v1.32+)
+- **Deep Learning**: PyTorch (v2.0+), torchvision
+- **Explainability**: pytorch-grad-cam
+- **Computer Vision**: OpenCV (headless), Pillow
+- **Data & Charts**: Pandas, Matplotlib, NumPy
 
 ---
 
-## ⚙️ Installation
+## ⚙️ Installation & Setup
 
-### Clone Repository
-
+### 1. Clone the Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/WasteVision-AI.git
-
-cd WasteVision-AI
+git clone https://github.com/SOUMYA0023/Smart-Waste-Classification-System.git
+cd Smart-Waste-Classification-System
 ```
 
-### Create Virtual Environment
-
+### 2. Set Up a Virtual Environment
 ```bash
-python -m venv venv
-```
-
-### Activate Environment
-
-Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-Linux/Mac:
-
-```bash
+python3 -m venv venv
 source venv/bin/activate
 ```
 
-### Install Dependencies
-
+### 3. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-## 🗂️ Prepare Dataset
-
+### 4. Run the Streamlit Application
 ```bash
-python data_prep.py
-```
-
-This will:
-
-* Validate images
-* Remove duplicates
-* Detect blurry images
-* Create train/validation/test splits
-* Generate dataset quality reports
-
----
-
-## 🏋️ Train the Model
-
-```bash
-python train.py
-```
-
-Training stages:
-
-* Phase A
-* Phase B
-* Phase C
-
-Outputs:
-
-```text
-models/
-reports/
+streamlit run app.py
 ```
 
 ---
 
-## 📈 Evaluate the Model
+## 💡 Usage Guide
 
-```bash
-python evaluate.py
-```
-
-Generated reports:
-
-* Accuracy
-* Precision
-* Recall
-* F1 Score
-* Top-3 Accuracy
-* Confusion Matrix
-* Classification Report
-
----
-
-## 🖼️ Single Image Prediction
-
-```bash
-python predict.py --image sample.jpg
-```
-
-Example Output:
-
-```text
-Predicted Class : Plastic Soft
-
-Confidence      : 92.4%
-
-Disposal Method : Soft Plastic Collection Bin
-```
-
----
-
-## 📷 Webcam Detection
-
-```bash
-python webcam_detection.py
-```
-
-Controls:
-
-```text
-Q -> Quit
-
-S -> Save Screenshot
-```
-
----
-
-## 🌐 Run Flask Application
-
-```bash
-python app.py
-```
-
-Open:
-
-```text
-http://127.0.0.1:5000
-```
-
-Available Pages:
-
-* Home
-* Predict
-* Classes
-* History
-* Analytics Dashboard
-
----
-
-## 📊 Database
-
-Database:
-
-```text
-wastevision.db
-```
-
-Stores:
-
-* Prediction history
-* Confidence scores
-* Disposal recommendations
-* Timestamps
-
----
-
-## 📌 Future Enhancements
-
-* TensorFlow Lite Deployment
-* Mobile Application
-* Smart IoT Waste Bin Integration
-* YOLO-Based Waste Detection
-* Multi-Object Waste Recognition
-* Cloud Deployment
-
----
-
-## 🎓 Academic Significance
-
-This project demonstrates concepts from:
-
-* Computer Vision
-* Deep Learning
-* Transfer Learning
-* Image Classification
-* Web Development
-* Database Systems
-* Sustainable Computing
-
----
-
-## 👩‍💻 Author
-
-**Neha Panbude**
-
-B.Tech Computer Science Engineering
-SRM Institute of Science and Technology
-
----
-
-## 📜 License
-
-This project is released under the MIT License.
-
----
-
-## ⭐ If you found this project useful, consider giving it a star on GitHub!
+1. **Upload an Image**: Drag & drop or browse for a waste image in the sidebar file uploader.
+2. **Review Predictions**: View classification confidences, decomposition timelines, and carbon footprint grades on the dashboard cards.
+3. **Inspect Attention Maps**: Choose a class from the Grad-CAM dropdown selection to see exactly which features triggered the prediction.
+4. **Track History**: Click past scans in the sidebar to review detailed results or clear the history at any time.
+5. **Generate Batch Reports**: Click **Generate Batch Report** under the session stats panel to view aggregated analysis plots and click **Export Session Data (CSV)** to download the raw data.
