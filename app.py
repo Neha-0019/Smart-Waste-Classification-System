@@ -606,6 +606,36 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
+            st.markdown(f"""
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-sage);
+                        padding: 14px; margin-bottom: 8px;">
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary);
+                            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Grade Distribution</div>
+                <div style="display: flex; gap: 6px; justify-content: space-between;">
+                    <div style="text-align: center; flex: 1; padding: 4px 2px; background: rgba(76, 175, 80, 0.1); border: 1px solid #4CAF50; border-radius: 4px;">
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: #4CAF50; font-weight: bold;">A</div>
+                        <div style="font-family: var(--font-display); font-size: 0.85rem; color: var(--text-primary); font-weight: 700; margin-top: 2px;">{stats['impact_distribution'].get('A', 0)}</div>
+                    </div>
+                    <div style="text-align: center; flex: 1; padding: 4px 2px; background: rgba(139, 195, 74, 0.1); border: 1px solid #8BC34A; border-radius: 4px;">
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: #8BC34A; font-weight: bold;">B</div>
+                        <div style="font-family: var(--font-display); font-size: 0.85rem; color: var(--text-primary); font-weight: 700; margin-top: 2px;">{stats['impact_distribution'].get('B', 0)}</div>
+                    </div>
+                    <div style="text-align: center; flex: 1; padding: 4px 2px; background: rgba(255, 152, 0, 0.1); border: 1px solid #FF9800; border-radius: 4px;">
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: #FF9800; font-weight: bold;">C</div>
+                        <div style="font-family: var(--font-display); font-size: 0.85rem; color: var(--text-primary); font-weight: 700; margin-top: 2px;">{stats['impact_distribution'].get('C', 0)}</div>
+                    </div>
+                    <div style="text-align: center; flex: 1; padding: 4px 2px; background: rgba(255, 87, 34, 0.1); border: 1px solid #FF5722; border-radius: 4px;">
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: #FF5722; font-weight: bold;">D</div>
+                        <div style="font-family: var(--font-display); font-size: 0.85rem; color: var(--text-primary); font-weight: 700; margin-top: 2px;">{stats['impact_distribution'].get('D', 0)}</div>
+                    </div>
+                    <div style="text-align: center; flex: 1; padding: 4px 2px; background: rgba(244, 67, 54, 0.1); border: 1px solid #F44336; border-radius: 4px;">
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: #F44336; font-weight: bold;">E</div>
+                        <div style="font-family: var(--font-display); font-size: 0.85rem; color: var(--text-primary); font-weight: 700; margin-top: 2px;">{stats['impact_distribution'].get('E', 0)}</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
             # Batch report
             st.markdown('<div class="section-label">Reports</div>', unsafe_allow_html=True)
 
