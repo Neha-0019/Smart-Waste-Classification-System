@@ -416,40 +416,68 @@ else:
                 decomp = info.get("decomposition_time_years", 0)
                 carbon = info.get("carbon_footprint_category", "medium")
                 carbon_color = CARBON_COLORS.get(carbon, "#FF9800")
+                bin_color = info.get("bin_color", "#8AA88C")
                 bar_width = int(confidence * 100)
                 decomp_display = get_decomposition_display(decomp)
 
+                # SVG circular arc for recyclability
+                arc_radius = 20
+                arc_circumference = 2 * 3.14159 * arc_radius
+                arc_filled = arc_circumference * rec_idx
+                arc_empty = arc_circumference - arc_filled
+
                 st.markdown(f"""
                 <div style="background: var(--bg-surface); border: 1px solid var(--border-sage);
-                            padding: 16px; margin-bottom: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="font-family: var(--font-display); font-weight: 700; font-size: 1rem;">
-                            {class_name}
-                        </span>
-                        <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-lime);">
-                            {confidence:.1%}
-                        </span>
-                    </div>
-                    <div style="background: rgba(181, 255, 77, 0.1); height: 6px; width: 100%; margin-bottom: 12px;">
-                        <div style="background: var(--accent-lime); height: 100%; width: {bar_width}%;
-                                    transition: width 0.6s ease;"></div>
-                    </div>
-                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary);">
-                            Recyclability <span style="color: var(--text-primary); font-weight: 600;">{rec_idx:.0%}</span>
+                            padding: 0; margin-bottom: 8px; display: flex; overflow: hidden;">
+                    <div style="width: 4px; background: {bin_color}; flex-shrink: 0;"></div>
+                    <div style="padding: 16px; flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div>
+                                <span style="font-family: var(--font-display); font-weight: 700; font-size: 1rem;">
+                                    {class_name}
+                                </span>
+                                <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary);
+                                             margin-left: 8px;">{pct}% of waste</span>
+                            </div>
+                            <span style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--accent-lime);
+                                         font-weight: 600;">
+                                {confidence:.1%}
+                            </span>
                         </div>
-                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary);">
-                            Decomposition <span style="color: var(--text-primary); font-weight: 600;">{decomp_display}</span>
+                        <div style="background: rgba(181, 255, 77, 0.08); height: 6px; width: 100%; margin-bottom: 14px;">
+                            <div style="background: linear-gradient(90deg, var(--accent-lime), #8FCC3D);
+                                        height: 100%; width: {bar_width}%; transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);"></div>
                         </div>
-                        <div style="font-family: var(--font-mono); font-size: 0.7rem;">
-                            <span style="display: inline-block; width: 8px; height: 8px; background: {carbon_color};
-                                         margin-right: 4px; vertical-align: middle;"></span>
-                            <span style="color: var(--text-secondary);">Carbon:</span>
-                            <span style="color: {carbon_color}; font-weight: 600;">{carbon.upper()}</span>
+                        <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <svg width="48" height="48" viewBox="0 0 48 48">
+                                    <circle cx="24" cy="24" r="{arc_radius}" fill="none" stroke="rgba(181,255,77,0.1)"
+                                            stroke-width="3" transform="rotate(-90 24 24)"/>
+                                    <circle cx="24" cy="24" r="{arc_radius}" fill="none" stroke="#B5FF4D"
+                                            stroke-width="3" stroke-dasharray="{arc_filled:.1f} {arc_empty:.1f}"
+                                            stroke-linecap="round" transform="rotate(-90 24 24)"
+                                            style="transition: stroke-dasharray 0.8s ease;"/>
+                                    <text x="24" y="26" text-anchor="middle" fill="#F0F4EE"
+                                          font-family="JetBrains Mono" font-size="9" font-weight="600">
+                                        {rec_idx:.0%}
+                                    </text>
+                                </svg>
+                                <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary);">
+                                    Recyclability
+                                </span>
+                            </div>
+                            <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary);">
+                                ⏱ <span style="color: var(--text-primary); font-weight: 500;">{decomp_display}</span>
+                            </div>
+                            <div style="font-family: var(--font-mono); font-size: 0.7rem; display: flex; align-items: center; gap: 4px;">
+                                <span style="display: inline-block; width: 8px; height: 8px; background: {carbon_color};"></span>
+                                <span style="color: {carbon_color}; font-weight: 600;">{carbon.upper()}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
+
 
             # ── COMPOSITION CHART placeholder ──
             st.markdown('<div class="section-label">Composition Breakdown</div>', unsafe_allow_html=True)
