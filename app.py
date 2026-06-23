@@ -19,6 +19,12 @@ from PIL import Image
 from waste_detector import WasteDetector
 from taxonomy import WASTE_TAXONOMY, CARBON_COLORS, get_decomposition_display
 from impact_calculator import compute_full_analysis
+from report_generator import (
+    generate_summary_dataframe,
+    generate_detailed_dataframe,
+    generate_composition_chart,
+    generate_recyclability_trend,
+)
 from history_manager import (
     add_scan,
     get_history,
@@ -601,12 +607,77 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-            # Batch report placeholder
+            st.markdown(f"""
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-sage);
+                        padding: 14px; margin-bottom: 8px;">
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary);
+                            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Grade Distribution</div>
+                <div style="display: flex; gap: 6px; justify-content: space-between;">
+                    <div style="text-align: center; flex: 1; padding: 4px 2px; background: rgba(76, 175, 80, 0.1); border: 1px solid #4CAF50; border-radius: 4px;">
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: #4CAF50; font-weight: bold;">A</div>
+                        <div style="font-family: var(--font-display); font-size: 0.85rem; color: var(--text-primary); font-weight: 700; margin-top: 2px;">{stats['impact_distribution'].get('A', 0)}</div>
+                    </div>
+                    <div style="text-align: center; flex: 1; padding: 4px 2px; background: rgba(139, 195, 74, 0.1); border: 1px solid #8BC34A; border-radius: 4px;">
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: #8BC34A; font-weight: bold;">B</div>
+                        <div style="font-family: var(--font-display); font-size: 0.85rem; color: var(--text-primary); font-weight: 700; margin-top: 2px;">{stats['impact_distribution'].get('B', 0)}</div>
+                    </div>
+                    <div style="text-align: center; flex: 1; padding: 4px 2px; background: rgba(255, 152, 0, 0.1); border: 1px solid #FF9800; border-radius: 4px;">
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: #FF9800; font-weight: bold;">C</div>
+                        <div style="font-family: var(--font-display); font-size: 0.85rem; color: var(--text-primary); font-weight: 700; margin-top: 2px;">{stats['impact_distribution'].get('C', 0)}</div>
+                    </div>
+                    <div style="text-align: center; flex: 1; padding: 4px 2px; background: rgba(255, 87, 34, 0.1); border: 1px solid #FF5722; border-radius: 4px;">
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: #FF5722; font-weight: bold;">D</div>
+                        <div style="font-family: var(--font-display); font-size: 0.85rem; color: var(--text-primary); font-weight: 700; margin-top: 2px;">{stats['impact_distribution'].get('D', 0)}</div>
+                    </div>
+                    <div style="text-align: center; flex: 1; padding: 4px 2px; background: rgba(244, 67, 54, 0.1); border: 1px solid #F44336; border-radius: 4px;">
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: #F44336; font-weight: bold;">E</div>
+                        <div style="font-family: var(--font-display); font-size: 0.85rem; color: var(--text-primary); font-weight: 700; margin-top: 2px;">{stats['impact_distribution'].get('E', 0)}</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Batch report
             st.markdown('<div class="section-label">Reports</div>', unsafe_allow_html=True)
-            st.markdown(
-                '<div style="background: var(--bg-surface); border: 1px solid var(--border-sage); '
-                'padding: 20px; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; '
-                'color: var(--text-secondary);">Batch report and export will appear here</div>',
-                unsafe_allow_html=True,
-            )
+
+            if stats["total_scans"] >= 1:
+                if st.button("Generate Batch Report", key="batch_report_btn", use_container_width=True):
+                    st.session_state["show_batch_report"] = True
+
+                if st.session_state.get("show_batch_report", False):
+                    current_history = get_history()
+                    summary_df = generate_summary_dataframe(current_history)
+
+                    if not summary_df.empty:
+                        st.markdown('<p style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary); margin-top: 10px;">SESSION SUMMARY</p>', unsafe_allow_html=True)
+                        st.dataframe(summary_df, use_container_width=True, hide_index=True)
+
+                    comp_chart = generate_composition_chart(current_history)
+                    if comp_chart:
+                        st.pyplot(comp_chart, use_container_width=True)
+                        plt.close(comp_chart)
+
+                    trend_chart = generate_recyclability_trend(current_history)
+                    if trend_chart:
+                        st.pyplot(trend_chart, use_container_width=True)
+                        plt.close(trend_chart)
+
+                    detailed_df = generate_detailed_dataframe(current_history)
+                    if not detailed_df.empty:
+                        csv_data = detailed_df.to_csv(index=False).encode('utf-8')
+                        st.markdown('<div style="margin-top: 14px;"></div>', unsafe_allow_html=True)
+                        st.download_button(
+                            label="📥 Export Session Data (CSV)",
+                            data=csv_data,
+                            file_name="waste_analysis_session_report.csv",
+                            mime="text/csv",
+                            use_container_width=True,
+                            key="export_csv_btn",
+                        )
+            else:
+                st.markdown(
+                    '<p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary); text-align: center; padding: 12px;">'
+                    'Scan at least one image to generate reports.</p>',
+                    unsafe_allow_html=True,
+                )
 
