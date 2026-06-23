@@ -17,6 +17,8 @@ st.set_page_config(
 
 from PIL import Image
 from waste_detector import WasteDetector
+from taxonomy import WASTE_TAXONOMY, CARBON_COLORS, get_decomposition_display
+from impact_calculator import compute_full_analysis
 from history_manager import (
     add_scan,
     get_history,
@@ -331,7 +333,7 @@ with st.sidebar:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# MAIN PANEL — Hero when no image
+# MAIN PANEL — Hero when no image, Results when image present
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 if uploaded_file is None and "selected_scan_idx" not in st.session_state:
     st.markdown("""
@@ -343,3 +345,196 @@ if uploaded_file is None and "selected_scan_idx" not in st.session_state:
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+else:
+    # ── Determine active image and predictions ──
+    active_image = None
+    active_predictions = None
+    active_filtered = None
+    active_analysis = None
+
+    if "selected_scan_idx" in st.session_state:
+        scan = get_scan_by_index(st.session_state["selected_scan_idx"])
+        if scan:
+            from history_manager import base64_to_image
+            active_image = base64_to_image(scan["thumbnail_b64"])
+            # Re-open at full resolution if we have the uploaded file
+            if uploaded_file is not None:
+                active_image = Image.open(uploaded_file)
+            active_predictions = scan["predictions"]
+            active_filtered = scan["filtered_predictions"]
+            active_analysis = scan["analysis"]
+
+    if active_image is None and uploaded_file is not None:
+        active_image = Image.open(uploaded_file)
+        raw_predictions = detector.predict(active_image)
+        active_filtered = detector.filter_predictions(raw_predictions)
+        active_predictions = raw_predictions
+        active_analysis = compute_full_analysis(active_filtered)
+
+        # Add to history
+        if "last_uploaded_name" not in st.session_state or st.session_state["last_uploaded_name"] != uploaded_file.name:
+            add_scan(active_image, active_predictions, active_filtered)
+            st.session_state["last_uploaded_name"] = uploaded_file.name
+
+    if active_image and active_analysis:
+        composition = active_analysis["composition"]
+        recyclability = active_analysis["recyclability_score"]
+        impact_letter, impact_desc, impact_color = active_analysis["impact_rating"]
+        disposal_instructions = active_analysis["disposal_instructions"]
+
+        # ── Three-column layout: Main (60%) + Right panel (240px) ──
+        main_col, spacer, right_col = st.columns([3, 0.1, 1])
+
+        with main_col:
+            # ── TOP ROW: Original + Grad-CAM ──
+            st.markdown('<div class="section-label">Image Analysis</div>', unsafe_allow_html=True)
+            img_left, img_right = st.columns(2)
+
+            with img_left:
+                st.markdown('<p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">ORIGINAL</p>', unsafe_allow_html=True)
+                st.image(active_image, use_container_width=True)
+
+            with img_right:
+                st.markdown('<p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px;">GRAD-CAM OVERLAY</p>', unsafe_allow_html=True)
+                # Placeholder — will be wired in PR #9
+                detected_classes = list(active_filtered.keys())
+                st.markdown(
+                    '<div style="background: var(--bg-surface); border: 1px solid var(--border-sage); '
+                    'padding: 40px; text-align: center; font-family: var(--font-mono); font-size: 0.8rem; '
+                    'color: var(--text-secondary);">Grad-CAM visualization will appear here</div>',
+                    unsafe_allow_html=True,
+                )
+
+            # ── DETECTION RESULTS ──
+            st.markdown('<div class="section-label">Detection Results</div>', unsafe_allow_html=True)
+
+            for class_name, confidence in active_filtered.items():
+                pct = composition.get(class_name, 0)
+                info = WASTE_TAXONOMY.get(class_name, {})
+                rec_idx = info.get("recyclability_index", 0)
+                decomp = info.get("decomposition_time_years", 0)
+                carbon = info.get("carbon_footprint_category", "medium")
+                carbon_color = CARBON_COLORS.get(carbon, "#FF9800")
+                bar_width = int(confidence * 100)
+                decomp_display = get_decomposition_display(decomp)
+
+                st.markdown(f"""
+                <div style="background: var(--bg-surface); border: 1px solid var(--border-sage);
+                            padding: 16px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-family: var(--font-display); font-weight: 700; font-size: 1rem;">
+                            {class_name}
+                        </span>
+                        <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-lime);">
+                            {confidence:.1%}
+                        </span>
+                    </div>
+                    <div style="background: rgba(181, 255, 77, 0.1); height: 6px; width: 100%; margin-bottom: 12px;">
+                        <div style="background: var(--accent-lime); height: 100%; width: {bar_width}%;
+                                    transition: width 0.6s ease;"></div>
+                    </div>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary);">
+                            Recyclability <span style="color: var(--text-primary); font-weight: 600;">{rec_idx:.0%}</span>
+                        </div>
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary);">
+                            Decomposition <span style="color: var(--text-primary); font-weight: 600;">{decomp_display}</span>
+                        </div>
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem;">
+                            <span style="display: inline-block; width: 8px; height: 8px; background: {carbon_color};
+                                         margin-right: 4px; vertical-align: middle;"></span>
+                            <span style="color: var(--text-secondary);">Carbon:</span>
+                            <span style="color: {carbon_color}; font-weight: 600;">{carbon.upper()}</span>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # ── COMPOSITION CHART placeholder ──
+            st.markdown('<div class="section-label">Composition Breakdown</div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div style="background: var(--bg-surface); border: 1px solid var(--border-sage); '
+                'padding: 40px; text-align: center; font-family: var(--font-mono); font-size: 0.8rem; '
+                'color: var(--text-secondary);">Composition chart will appear here</div>',
+                unsafe_allow_html=True,
+            )
+
+            # ── DISPOSAL INSTRUCTIONS ──
+            st.markdown('<div class="section-label">Disposal Instructions</div>', unsafe_allow_html=True)
+            for i, instruction in enumerate(disposal_instructions, 1):
+                st.markdown(f"""
+                <div style="display: flex; gap: 12px; margin-bottom: 10px; padding: 10px;
+                            background: var(--bg-surface); border: 1px solid var(--border-sage);">
+                    <span style="font-family: var(--font-display); font-weight: 700; font-size: 1.1rem;
+                                 color: var(--accent-lime); min-width: 24px;">{i}</span>
+                    <span style="font-family: var(--font-body); font-size: 0.85rem; color: var(--text-primary);
+                                 line-height: 1.5;">{instruction}</span>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # ── ENVIRONMENTAL IMPACT SCORE ──
+            st.markdown('<div class="section-label">Environmental Impact Score</div>', unsafe_allow_html=True)
+            st.markdown(f"""
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-sage);
+                        padding: 24px; text-align: center;">
+                <div style="font-family: var(--font-display); font-weight: 800; font-size: 4rem;
+                            color: {impact_color}; line-height: 1;">{impact_letter}</div>
+                <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);
+                            margin-top: 8px; max-width: 400px; margin-left: auto; margin-right: auto;">
+                    {impact_desc}
+                </div>
+                <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary);
+                            margin-top: 12px;">
+                    Weighted Recyclability Score:
+                    <span style="color: var(--accent-lime); font-weight: 600;">{recyclability:.1%}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # ── RIGHT PANEL ──
+        with right_col:
+            stats = get_session_stats()
+
+            st.markdown('<div class="section-label">Session Summary</div>', unsafe_allow_html=True)
+
+            # Stat cards
+            st.markdown(f"""
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-sage);
+                        padding: 14px; margin-bottom: 8px;">
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary);
+                            text-transform: uppercase; letter-spacing: 1px;">Total Scans</div>
+                <div style="font-family: var(--font-display); font-weight: 700; font-size: 1.8rem;
+                            color: var(--accent-lime); margin-top: 4px;">{stats['total_scans']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-sage);
+                        padding: 14px; margin-bottom: 8px;">
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary);
+                            text-transform: uppercase; letter-spacing: 1px;">Most Frequent</div>
+                <div style="font-family: var(--font-display); font-weight: 700; font-size: 1rem;
+                            color: var(--text-primary); margin-top: 4px;">{stats['most_frequent_type']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-sage);
+                        padding: 14px; margin-bottom: 8px;">
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary);
+                            text-transform: uppercase; letter-spacing: 1px;">Avg Recyclability</div>
+                <div style="font-family: var(--font-display); font-weight: 700; font-size: 1.8rem;
+                            color: var(--accent-lime); margin-top: 4px;">{stats['avg_recyclability']:.0%}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Batch report placeholder
+            st.markdown('<div class="section-label">Reports</div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div style="background: var(--bg-surface); border: 1px solid var(--border-sage); '
+                'padding: 20px; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; '
+                'color: var(--text-secondary);">Batch report and export will appear here</div>',
+                unsafe_allow_html=True,
+            )
+
