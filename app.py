@@ -220,7 +220,7 @@ section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
 }
 
 /* Button overrides */
-.stButton > button {
+.stButton > button, .stDownloadButton > button {
     background-color: transparent;
     color: var(--text-secondary);
     border: 1px solid var(--border-sage);
@@ -233,10 +233,26 @@ section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
     width: 100%;
 }
 
-.stButton > button:hover {
+.stButton > button:hover, .stDownloadButton > button:hover {
     border-color: var(--accent-lime);
     color: var(--accent-lime);
     background-color: rgba(181, 255, 77, 0.05);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-deep);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-sage);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-lime);
 }
 
 /* Divider */
