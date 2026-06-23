@@ -481,14 +481,56 @@ else:
                 """, unsafe_allow_html=True)
 
 
-            # ── COMPOSITION CHART placeholder ──
+            # ── COMPOSITION PIE CHART ──
             st.markdown('<div class="section-label">Composition Breakdown</div>', unsafe_allow_html=True)
-            st.markdown(
-                '<div style="background: var(--bg-surface); border: 1px solid var(--border-sage); '
-                'padding: 40px; text-align: center; font-family: var(--font-mono); font-size: 0.8rem; '
-                'color: var(--text-secondary);">Composition chart will appear here</div>',
-                unsafe_allow_html=True,
+
+            import matplotlib.pyplot as plt
+            import matplotlib
+
+            matplotlib.rcParams["font.family"] = "sans-serif"
+
+            fig, ax = plt.subplots(figsize=(6, 4), facecolor="#0D1F0F")
+            ax.set_facecolor("#0D1F0F")
+
+            labels = list(composition.keys())
+            sizes = list(composition.values())
+            colors = [WASTE_TAXONOMY.get(c, {}).get("bin_color", "#8AA88C") for c in labels]
+
+            wedges, texts, autotexts = ax.pie(
+                sizes,
+                labels=None,
+                colors=colors,
+                autopct="%1.1f%%",
+                startangle=90,
+                pctdistance=0.78,
+                wedgeprops={"linewidth": 1.5, "edgecolor": "#0D1F0F"},
             )
+
+            for autotext in autotexts:
+                autotext.set_fontsize(8)
+                autotext.set_color("#F0F4EE")
+                autotext.set_fontfamily("monospace")
+                autotext.set_fontweight("bold")
+
+            # Draw centre circle for donut effect
+            centre_circle = plt.Circle((0, 0), 0.55, fc="#0D1F0F")
+            ax.add_artist(centre_circle)
+
+            # Legend
+            legend = ax.legend(
+                wedges,
+                [f"{label} ({size}%)" for label, size in zip(labels, sizes)],
+                loc="center left",
+                bbox_to_anchor=(1, 0.5),
+                fontsize=7,
+                frameon=False,
+                labelcolor="#F0F4EE",
+            )
+
+            ax.set_aspect("equal")
+            plt.tight_layout()
+            st.pyplot(fig, use_container_width=True)
+            plt.close(fig)
 
             # ── DISPOSAL INSTRUCTIONS ──
             st.markdown('<div class="section-label">Disposal Instructions</div>', unsafe_allow_html=True)
