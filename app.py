@@ -19,6 +19,11 @@ from PIL import Image
 from waste_detector import WasteDetector
 from taxonomy import WASTE_TAXONOMY, CARBON_COLORS, get_decomposition_display
 from impact_calculator import compute_full_analysis
+from report_generator import (
+    generate_summary_dataframe,
+    generate_composition_chart,
+    generate_recyclability_trend,
+)
 from history_manager import (
     add_scan,
     get_history,
@@ -601,12 +606,34 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-            # Batch report placeholder
+            # Batch report
             st.markdown('<div class="section-label">Reports</div>', unsafe_allow_html=True)
-            st.markdown(
-                '<div style="background: var(--bg-surface); border: 1px solid var(--border-sage); '
-                'padding: 20px; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; '
-                'color: var(--text-secondary);">Batch report and export will appear here</div>',
-                unsafe_allow_html=True,
-            )
+
+            if stats["total_scans"] >= 1:
+                if st.button("Generate Batch Report", key="batch_report_btn", use_container_width=True):
+                    st.session_state["show_batch_report"] = True
+
+                if st.session_state.get("show_batch_report", False):
+                    current_history = get_history()
+                    summary_df = generate_summary_dataframe(current_history)
+
+                    if not summary_df.empty:
+                        st.markdown('<p style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary); margin-top: 10px;">SESSION SUMMARY</p>', unsafe_allow_html=True)
+                        st.dataframe(summary_df, use_container_width=True, hide_index=True)
+
+                    comp_chart = generate_composition_chart(current_history)
+                    if comp_chart:
+                        st.pyplot(comp_chart, use_container_width=True)
+                        plt.close(comp_chart)
+
+                    trend_chart = generate_recyclability_trend(current_history)
+                    if trend_chart:
+                        st.pyplot(trend_chart, use_container_width=True)
+                        plt.close(trend_chart)
+            else:
+                st.markdown(
+                    '<p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary); text-align: center; padding: 12px;">'
+                    'Scan at least one image to generate reports.</p>',
+                    unsafe_allow_html=True,
+                )
 
